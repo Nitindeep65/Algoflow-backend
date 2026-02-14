@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String  @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Question {
+  id          String   @id @default(cuid())
+  slug        String   @unique 
+  title       String
+  description String   
+  difficulty  Difficulty
+  constraints String?  
+  examples    Json     
+  testCases   Json     
+  topics      Topic[]  @relation("QuestionTopics")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("questions")
+}
+
+model Topic {
+  id          String   @id @default(cuid())
+  name        String   @unique 
+  slug        String   @unique 
+
+  questions   Question[] @relation("QuestionTopics")
+
+  @@map("topics")
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
