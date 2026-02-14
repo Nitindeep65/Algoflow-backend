@@ -32,16 +32,28 @@ export const SignUp = async(req , res)=>{
 
 export  const Login = async(req  , res)=>{
     try{
+        console.log('🔐 Login request received:', { email: req.body.email });
+        
         const {email , password}=req.body;
+        
+        if (!email || !password) {
+            console.log('❌ Missing email or password');
+            return res.status(400).json({message:'Email and password are required'})
+        }
+        
         const user = await prisma.user.findUnique({
             where : {email}
         })
+        
         if(!user){
-            return res.status(400).json({message:'user not found '})
+            console.log('❌ User not found:', email);
+            return res.status(400).json({message:'Invalid email or password'})
         }
+        
         const isMatch = await bcrypt.compare(password , user.password);
         if(!isMatch){
-            return res.status(400).json({message:'invalid credentials'})
+            console.log('❌ Password mismatch for user:', email);
+            return res.status(400).json({message:'Invalid email or password'})
         }
         
         const adminEmailString = process.env.ADMIN_EMAIL || '';
@@ -50,6 +62,9 @@ export  const Login = async(req  , res)=>{
         const role = adminEmail.includes(email.toLowerCase()) ? 'admin' : 'user';
         
         const token = generateToken(user.id);
+        
+        console.log('✅ Login successful for user:', email, 'Role:', role);
+        
         res.status(200).json({
             message:'login successful', 
             user: { ...user, role }, 
@@ -57,7 +72,7 @@ export  const Login = async(req  , res)=>{
         })
     }
     catch(error){
-        console.error('Login error:', error);
+        console.error('❌ Login error:', error);
         res.status(500).json({message:'internal server error', error: error.message})
     }
 }
